@@ -19,6 +19,7 @@
 using OsmSharp.Collections.Tags;
 using OsmSharp.Math.Geo;
 using System.Collections.Generic;
+using OsmSharp.Routing.Profiles;
 
 namespace OsmSharp.Routing.Test
 {
@@ -44,6 +45,12 @@ namespace OsmSharp.Routing.Test
         }
 
         public Result<Route[][]> TryCalculate(OsmSharp.Routing.Profiles.Profile profile, RouterPoint[] sources, RouterPoint[] targets, ISet<int> invalidSources, ISet<int> invalidTargets)
+        {
+            throw new System.NotImplementedException();
+        }
+
+        public Result<Route[][]> TryCalculate(Profile profile, RouterPoint[] sources, RouterPoint[] targets, HashSet<int> invalidSources,
+            HashSet<int> invalidTargets)
         {
             throw new System.NotImplementedException();
         }
@@ -92,7 +99,38 @@ namespace OsmSharp.Routing.Test
             return new Result<float[][]>(weights);
         }
 
-        public Result<float> TryCalculateWeight(OsmSharp.Routing.Profiles.Profile profile, RouterPoint source, RouterPoint target)
+        Result<float[][]> IRouter.TryCalculateWeight(Profile profile, RouterPoint[] sources, RouterPoint[] targets, HashSet<int> invalidSources,
+            HashSet<int> invalidTargets)
+        {
+            return TryCalculateWeight(profile, sources, targets, invalidSources, invalidTargets);
+        }
+
+        public Result<float[][]> TryCalculateWeight(Profile profile, RouterPoint[] sources, 
+            RouterPoint[] targets, HashSet<int> invalidSources, HashSet<int> invalidTargets)
+        {
+            var weights = new float[sources.Length][];
+            for (var s = 0; s < sources.Length; s++)
+            {
+                weights[s] = new float[targets.Length];
+                for (var t = 0; t < sources.Length; t++)
+                {
+                    weights[s][t] = (float)(new GeoCoordinate(sources[s].Latitude,
+                        sources[s].Longitude)).DistanceReal(
+                            (new GeoCoordinate(targets[t].Latitude,
+                                targets[t].Longitude))).Value;
+                }
+            }
+
+            foreach (var invalid in _invalidSet)
+            {
+                invalidSources.Add(invalid);
+                invalidTargets.Add(invalid);
+            }
+
+            return new Result<float[][]>(weights);
+        }
+
+        public Result<float> TryCalculateWeight(Profile profile, RouterPoint source, RouterPoint target)
         {
             throw new System.NotImplementedException();
         }

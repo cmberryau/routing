@@ -253,16 +253,17 @@ namespace OsmSharp.Routing
 
             // get the get factor function.
             var getFactor = this.GetGetFactor(profile);
-            
+
             OsmSharp.Routing.Graphs.Directed.DirectedMetaGraph contracted;
             if (_db.TryGetContracted(profile, out contracted))
             {
-                OsmSharp.Logging.Log.TraceEvent("Router", Logging.TraceEventType.Warning, 
+                OsmSharp.Logging.Log.TraceEvent("Router", Logging.TraceEventType.Warning,
                     "Many to many route calculations are not possible yet using contracted algorithms.");
             }
 
             // use non-contracted calculation.
-            var algorithm = new OsmSharp.Routing.Algorithms.Default.ManyToMany(_db, getFactor, sources, targets, float.MaxValue);
+            var algorithm = new OsmSharp.Routing.Algorithms.Default.ManyToMany(_db, getFactor, sources, targets,
+                float.MaxValue);
             algorithm.Run();
             if (!algorithm.HasSucceeded)
             {
@@ -275,19 +276,19 @@ namespace OsmSharp.Routing
             // build all routes.
             var routes = new Route[sources.Length][];
             var path = new List<uint>();
-            for(var s = 0; s < sources.Length; s++)
+            for (var s = 0; s < sources.Length; s++)
             {
                 routes[s] = new Route[targets.Length];
                 for (var t = 0; t < targets.Length; t++)
                 {
                     var localPath = algorithm.GetPath(s, t);
-                    if(localPath != null)
+                    if (localPath != null)
                     {
                         path.Clear();
                         localPath.AddToList(path);
                         var route = this.BuildRoute(profile, sources[s],
                             targets[t], path);
-                        if(route.IsError)
+                        if (route.IsError)
                         {
                             return route.ConvertError<Route[][]>();
                         }
@@ -296,6 +297,24 @@ namespace OsmSharp.Routing
                 }
             }
             return new Result<Route[][]>(routes);
+        }
+
+        /// <summary>
+        /// Calculates all routes between all sources and all targets.
+        /// </summary>
+        /// <returns></returns>
+        public Result<Route[][]> TryCalculate(Profile profile, RouterPoint[] sources, RouterPoint[] targets, 
+            HashSet<int> invalidSources, HashSet<int> invalidTargets)
+        {
+            if (!_db.Supports(profile))
+            {
+                return new Result<Route[][]>("Routing profile is not supported.", (message) =>
+                {
+                    return new Exception(message);
+                });
+            }
+
+            throw new NotImplementedException();
         }
 
         /// <summary>
@@ -317,10 +336,10 @@ namespace OsmSharp.Routing
             var getFactor = this.GetGetFactor(profile);
 
             float[][] weights = null;
-            OsmSharp.Routing.Graphs.Directed.DirectedMetaGraph contracted;
+            Graphs.Directed.DirectedMetaGraph contracted;
             if (_db.TryGetContracted(profile, out contracted))
             { // contracted calculation.
-                var algorithm = new OsmSharp.Routing.Algorithms.Contracted.ManyToManyBidirectionalDykstra(_db, profile,
+                var algorithm = new Algorithms.Contracted.ManyToManyBidirectionalDykstra(_db, profile,
                     sources, targets);
                 algorithm.Run();
                 if (!algorithm.HasSucceeded)
@@ -334,7 +353,8 @@ namespace OsmSharp.Routing
             }
             else
             { // non-contracted calculation.
-                var algorithm = new OsmSharp.Routing.Algorithms.Default.ManyToMany(_db, getFactor, sources, targets, float.MaxValue);
+                var algorithm = new ManyToMany(_db, profile, sources, targets, float.MaxValue);
+
                 algorithm.Run();
                 if (!algorithm.HasSucceeded)
                 {
@@ -455,14 +475,101 @@ namespace OsmSharp.Routing
         /// </summary>
         protected Result<Route> BuildRoute(Profile profile, RouterPoint source, RouterPoint target, List<uint> path)
         {
-            if(this.CustomRouteBuilder != null)
-            { // there is a custom route builder.
-                return this.CustomRouteBuilder(_db, profile, this.GetGetFactor(profile), 
+            if (this.CustomRouteBuilder != null)
+            {
+                // there is a custom route builder.
+                return this.CustomRouteBuilder(_db, profile, this.GetGetFactor(profile),
                     source, target, path);
             }
 
             // use the default.
             return CompleteRouteBuilder.TryBuild(_db, profile, source, target, path);
+        }
+
+
+        public Result<float[][]> TryCalculateWeight(Profile profile, RouterPoint[] sources, RouterPoint[] targets, 
+            HashSet<int> invalidSources, HashSet<int> invalidTargets)
+        {
+            if (!_db.Supports(profile))
+            {
+                return new Result<float[][]>("Routing profile is not supported.", (message) =>
+                {
+                    return new Exception(message);
+                });
+            }
+
+            float[][] weights = null;
+            Graphs.Directed.DirectedMetaGraph contracted;
+            if (_db.TryGetContracted(profile, out contracted))
+            { // contracted calculation.
+                var algorithm = new Algorithms.Contracted.ManyToManyBidirectionalDykstra(_db, profile,
+                    sources, targets);
+                algorithm.Run();
+                if (!algorithm.HasSucceeded)
+                {
+                    return new Result<float[][]>(algorithm.ErrorMessage, (message) =>
+                    {
+                        return new RouteNotFoundException(message);
+                    });
+                }
+                weights = algorithm.Weights;
+            }
+            else
+            { // non-contracted calculation.
+                var algorithm = new ManyToMany(_db, profile, sources, targets, float.MaxValue);
+                algorithm.Run();
+                if (!algorithm.HasSucceeded)
+                {
+                    return new Result<float[][]>(algorithm.ErrorMessage, (message) =>
+                    {
+                        return new RouteNotFoundException(message);
+                    });
+                }
+                weights = algorithm.Weights;
+            }
+
+            // extract invalid targets.
+            for(var s = 0; s < weights.Length; s++)
+            {
+                var invalid = true;
+                for(var t = 0; t < weights[s].Length; t++)
+                {
+                    if(t != s)
+                    {
+                        if(weights[s][t] < float.MaxValue)
+                        {
+                            invalid = false;
+                            break;
+                        }
+                    }
+                }
+                if (invalid)
+                {
+                    invalidSources.Add(s);
+                }
+            }
+
+            // extract invalid targets.
+            for (var t = 0; t < weights[0].Length; t++)
+            {
+                var invalid = true;
+                for (var s = 0; s < weights.Length; s++)
+                {
+                    if (t != s)
+                    {
+                        if (weights[s][t] < float.MaxValue)
+                        {
+                            invalid = false;
+                            break;
+                        }
+                    }
+                }
+                if (invalid)
+                {
+                    invalidTargets.Add(t);
+                }
+            }
+            return new Result<float[][]>(weights);
         }
     }
 }

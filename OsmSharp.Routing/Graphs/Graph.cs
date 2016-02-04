@@ -164,7 +164,7 @@ namespace OsmSharp.Routing.Graphs
         /// </summary>
         private void IncreaseVertexSize(long min)
         {
-            var newSize = (long)(System.Math.Floor(min / BLOCKSIZE) + 1) * (long)BLOCKSIZE;
+            var newSize = (long)(System.Math.Floor(Convert.ToDouble(min / BLOCKSIZE)) + 1) * (long)BLOCKSIZE;
             if (newSize < _vertices.Length)
             { // no need to increase, already big enough.
                 return;

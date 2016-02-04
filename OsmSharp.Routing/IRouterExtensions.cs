@@ -575,8 +575,28 @@ namespace OsmSharp.Routing
         /// Calculates all weights between all locations.
         /// </summary>
         /// <returns></returns>
+        public static Result<float[][]> TryCalculateWeight(this IRouter router, Profile profile, RouterPoint[] locations,
+            HashSet<int> invalids)
+        {
+            return router.TryCalculateWeight(profile, locations, locations, invalids, invalids);
+        }
+
+        /// <summary>
+        /// Calculates all weights between all locations.
+        /// </summary>
+        /// <returns></returns>
         public static float[][] CalculateWeight(this IRouter router, Profile profile, RouterPoint[] locations,
             ISet<int> invalids)
+        {
+            return router.TryCalculateWeight(profile, locations, invalids).Value;
+        }
+
+        /// <summary>
+        /// Calculates all weights between all locations.
+        /// </summary>
+        /// <returns></returns>
+        public static float[][] CalculateWeight(this IRouter router, Profile profile, RouterPoint[] locations,
+            HashSet<int> invalids)
         {
             return router.TryCalculateWeight(profile, locations, invalids).Value;
         }

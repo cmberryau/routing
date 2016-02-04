@@ -19,7 +19,6 @@
 using OsmSharp.Collections.Tags;
 using System.Collections.Generic;
 using System.IO;
-using System.Diagnostics.Contracts;
 
 namespace OsmSharp.Routing
 {

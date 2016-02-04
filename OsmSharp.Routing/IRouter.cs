@@ -69,10 +69,24 @@ namespace OsmSharp.Routing
             ISet<int> invalidSources, ISet<int> invalidTargets);
 
         /// <summary>
+        /// Calculates all routes between all sources and all targets.
+        /// </summary>
+        /// <returns></returns>
+        Result<Route[][]> TryCalculate(Profile profile, RouterPoint[] sources, RouterPoint[] targets,
+            HashSet<int> invalidSources, HashSet<int> invalidTargets);
+
+        /// <summary>
         /// Calculates all weights between all sources and all targets.
         /// </summary>
         /// <returns></returns>
         Result<float[][]> TryCalculateWeight(Profile profile, RouterPoint[] sources, RouterPoint[] targets,
             ISet<int> invalidSources, ISet<int> invalidTargets);
+
+        /// <summary>
+        /// Calculates all weights between all sources and all targets.
+        /// </summary>
+        /// <returns></returns>
+        Result<float[][]> TryCalculateWeight(Profile profile, RouterPoint[] sources, RouterPoint[] targets,
+            HashSet<int> invalidSources, HashSet<int> invalidTargets);
     }
 }

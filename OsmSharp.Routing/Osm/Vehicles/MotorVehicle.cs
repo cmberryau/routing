@@ -117,7 +117,7 @@ namespace OsmSharp.Routing.Osm.Vehicles
             var highwayType = string.Empty;
             if(this.TryGetHighwayType(tags, out highwayType))
             {
-                if(!string.IsNullOrWhiteSpace(highwayType))
+                if(!highwayType.IsNullOrWhiteSpace())
                 {
                     if(highwayType.ToLowerInvariant().Equals("motorway") ||
                        highwayType.ToLowerInvariant().Equals("motorway_link"))

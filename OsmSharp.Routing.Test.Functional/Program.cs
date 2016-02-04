@@ -18,7 +18,6 @@
 
 using OsmSharp.Geo.Features;
 using OsmSharp.Geo.Geometries;
-using OsmSharp.IO.Json.Linq;
 using OsmSharp.Routing.Osm.Vehicles;
 using OsmSharp.Routing.Test.Functional.Staging;
 using OsmSharp.Routing.Test.Functional.Tests;

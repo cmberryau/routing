@@ -241,7 +241,7 @@ namespace OsmSharp.Routing.Osm.Streams
                     if ((_nodeCount > 500000000 ||
                          _minimumStages > 1))
                     { // more than half a billion nodes, split in different stages.
-                        var stages = System.Math.Max(System.Math.Ceiling(_nodeCount / 500000000), _minimumStages);
+                        var stages = System.Math.Max(System.Math.Ceiling(Convert.ToDouble(_nodeCount / 500000000)), _minimumStages);
 
                         if (stages >= 4)
                         {
